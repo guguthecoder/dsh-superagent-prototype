@@ -1,6 +1,6 @@
 /** Resolves packaged asset paths from either the source tree or the compiled lib/ output. */
 import { existsSync, readFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 let cached: string | undefined
@@ -17,4 +17,6 @@ export function packageRoot(): string {
   }
   throw new Error('dsh-superagent package root not found')
 }
-export const packagePath = (...parts: string[]): string => join(packageRoot(), ...parts)
+// `resolve` rather than `join`: `join` appends an absolute part instead of replacing the path, so a caller passing an
+// absolute name would silently read `<packageRoot>/<absolute name>` instead of the file it named.
+export const packagePath = (...parts: string[]): string => resolve(packageRoot(), ...parts)
