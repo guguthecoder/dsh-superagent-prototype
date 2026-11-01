@@ -857,7 +857,9 @@ it('reports each setup problem where the operator fixes it, and checks the agent
   let workerPath = ''
   if (process.platform === 'win32') {
     const specs = subprocess.spawn.mock.calls.map(([spec]) => spec as { argv: readonly string[]; env?: Record<string, string> })
-    workerPath = specs.find(spec => spec.env?.PATH !== undefined)?.env?.PATH ?? ''
+    // Bind to the same call the POSIX branch checks: any spawn carries an env, so matching on PATH alone would assert nothing.
+    workerPath = specs.find(spec => spec.argv.includes(AGENT()))?.env?.PATH ?? ''
+    expect(workerPath).not.toBe('')
   } else {
     expect(check[0]).toBe('env')
     expect(check[1]!.startsWith('PATH=')).toBe(true)
