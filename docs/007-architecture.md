@@ -369,6 +369,8 @@ Some generic modules still refer directly to GitHub or Feishu:
 | `src/sources/github-read.ts` | CI snapshots, repository reads, the `github/` resources, and `githubThreadContext`: an Issue's or pull request's conversation by page |
 | `src/sources/feishu.ts` | The Feishu kind and plugin entry, exported as `./feishu-watch` |
 | `src/sources/msp.ts` | The MSP kind and plugin entry, exported as `./msp-watch`: local node signals pushed as newline-delimited JSON by `python/msp_bridge.py`, mapped to senderless Triggers under the `ambient` admission row. No polling |
+| `src/sources/experiences.ts` | Experience files: frontmatter parsing, `trigger` and `condition` matching, and the experience block a matched signal carries into the assessment or worker prompt |
+| `src/sources/experience-tools.ts` | The five model-facing experience tools — list, read, create, update, disable — writing `<experienceDir>/<id>.md` under a slug-only id |
 | `src/sources/feishu-trigger.ts` | Feishu messages as Triggers, by one rule for live events, history pages and topic pages |
 | `src/sources/feishu-loops.ts` | The Feishu loops: the event consumer, history recovery, chat names and polling of subscribed topics |
 | `src/sources/feishu-channel.ts` | The Feishu Channel: topic replies, `sent` or `gone` |
@@ -408,6 +410,7 @@ Some generic modules still refer directly to GitHub or Feishu:
 | `tests/stage.spec.ts` | The Ticket stages, row by row |
 | `tests/policy.spec.ts` | Source scope, the gate, the admission table, Mandate revalidation, the Policy version, settings migrations and assessment outcomes |
 | `tests/msp.test.mjs` | The MSP Source: signal→Trigger mapping, the senderless machine actor, the ambient admission row, deterministic ids |
+| `tests/experience-tools.spec.ts` | The experience tools: the level a create lands on, the refused downgrade, and ids that stay inside the experience directory |
 | `tests/registry.spec.ts` | `SourceRegistry`: instances, validation, Policy parts, Channels and Thread context |
 | `tests/sources.spec.ts` | The Feishu and GitHub Sources on a `SourceContext`: translation, polls and read positions, the pull request rules, health |
 | `tests/commands.spec.ts` | CLI calls as the deployment's accounts, the Channels' answers, and repository-scoped GitHub calls |

@@ -76,9 +76,18 @@ export function registerExperienceTools(tools: { register(def: unknown): unknown
     }
   }
 
+  /**
+   * The file an id names, or undefined when the id is not a plain slug. `id` comes from the model, so `..`,
+   * separators and drive letters must never reach `join`: without this check `experience_read` would read any `.md`
+   * on disk and `experience_update` would rewrite it.
+   */
+  const fileOf = (id: string): string | undefined => ID_RE.test(id) ? join(dir, `${id}.md`) : undefined
+
   const read = (id: string) => {
+    const file = fileOf(id)
+    if (!file) return undefined
     try {
-      return readFileSync(join(dir, `${id}.md`), 'utf8')
+      return readFileSync(file, 'utf8')
     } catch {
       return undefined
     }
@@ -197,10 +206,14 @@ export function registerExperienceTools(tools: { register(def: unknown): unknown
         const patch: Record<string, string> = {}
         for (const key of ['trigger', 'action', 'condition']) if (typeof args?.[key] === 'string') patch[key] = args[key]
         let out = text
-        for (const [key, value] of Object.entries(patch)) out = out.replace(new RegExp(`^${key}:.*$`, 'm'), `${key}: ${value.replace(/\s*\n\s*/g, ' ')}`)
+        // A function replacer, so `$&`, `$'` and `` $` `` in the value are written literally instead of being expanded.
+        for (const [key, value] of Object.entries(patch)) {
+          const line = `${key}: ${value.replace(/\s*\n\s*/g, ' ')}`
+          out = out.replace(new RegExp(`^${key}:.*$`, 'm'), () => line)
+        }
         const trust = typeof args?.trust_level === 'string' ? clampTrust(args.trust_level) : undefined
         if (trust) out = out.replace(/^trust_level:.*$/m, `trust_level: ${trust.level}`)
-        writeFileSync(join(dir, `${id}.md`), out, 'utf8')
+        writeFileSync(fileOf(id)!, out, 'utf8')
         // A downgrade to L1/L2 is the model granting itself the right to act unasked; report that it did not happen.
         if (trust?.clamped) {
           const message = `等级没有改：L1/L2 是不经确认就行动的等级，模型不能自授，${id}.md 里仍是 L3。` +
@@ -222,8 +235,10 @@ export function registerExperienceTools(tools: { register(def: unknown): unknown
         const id = String(args?.id ?? '')
         const text = read(id)
         if (!text) return { content: [{ type: 'text', text: `没有这条经验：${id}` }], structuredContent: { ok: false, message: '没有' } }
-        const out = /^enabled:/m.test(text) ? text.replace(/^enabled:.*$/m, 'enabled: false') : text.replace(/^---\n/, '---\nenabled: false\n')
-        writeFileSync(join(dir, `${id}.md`), out, 'utf8')
+        // Keep the file's own line ending: a CRLF frontmatter never matches `^---\n`, and the write would "succeed" unmodified.
+        const out = /^enabled:/m.test(text) ? text.replace(/^enabled:.*$/m, 'enabled: false')
+          : text.replace(/^---(\r?\n)/, (_match, eol: string) => `---${eol}enabled: false${eol}`)
+        writeFileSync(fileOf(id)!, out, 'utf8')
         return { content: [{ type: 'text', text: `已停用 ${id}` }], structuredContent: { ok: true, message: `已停用 ${id}`, id } }
       },
     }) as () => void,
