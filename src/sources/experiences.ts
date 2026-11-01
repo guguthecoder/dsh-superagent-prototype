@@ -36,12 +36,13 @@ const DIR = (): string => process.env.TACIT_EXPERIENCE_DIR ?? join(homedir(), '.
 function parse(text: string, file: string): Experience | undefined {
   const m = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/.exec(text)
   if (!m) return undefined
+  const [, header = '', rawBody = ''] = m
   const front: Record<string, string> = {}
-  for (const line of m[1].split(/\r?\n/)) {
+  for (const line of header.split(/\r?\n/)) {
     const pair = /^([A-Za-z0-9_.-]+)\s*:\s*(.*)$/.exec(line.trim())
-    if (pair) front[pair[1]] = pair[2].trim()
+    if (pair) front[pair[1]!] = pair[2]!.trim()
   }
-  const body = m[2].trim()
+  const body = rawBody.trim()
   const id = front.id || file.replace(/\.md$/i, '')
   if (!id || !front.trigger) return undefined
   if (front.enabled === 'false') return undefined
@@ -106,13 +107,15 @@ export function conditionHolds(condition: string, context: Record<string, unknow
   const pick = (path: string): unknown =>
     path.split('.').reduce<unknown>((acc, key) => (acc && typeof acc === 'object' ? (acc as Record<string, unknown>)[key] : undefined), context)
   const eq = /^([A-Za-z_][\w.]*)\s*==\s*(.+)$/.exec(c)
-  if (eq) return String(pick(eq[1]) ?? '') === eq[2].trim().replace(/^["']|["']$/g, '')
+  if (eq) return String(pick(eq[1]!) ?? '') === eq[2]!.trim().replace(/^["']|["']$/g, '')
   // `file.extension in ["pdf", "docx"]`：经验里最常用的一种写法，必须认。
   const inList = /^([A-Za-z_][\w.]*)\s+in\s+\[(.*)\]$/.exec(c)
   if (inList) {
-    const allowed = inList[2].split(',').map(x => x.trim().replace(/^["']|["']$/g, '').toLowerCase())
-    return allowed.includes(String(pick(inList[1]) ?? '').toLowerCase())
+    const allowed = inList[2]!.split(',').map(x => x.trim().replace(/^["']|["']$/g, '').toLowerCase())
+    return allowed.includes(String(pick(inList[1]!) ?? '').toLowerCase())
   }
+  // A condition this parser does not understand matches nothing: acting on a guess is worse than staying quiet.
+  return false
 }
 
 /** 命中这个信号的经验，按 id 排序，最多 `limit` 条。 */
