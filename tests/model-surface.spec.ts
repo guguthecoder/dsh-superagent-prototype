@@ -178,7 +178,8 @@ async function drive(host: Host) {
   await run(master, 'orchestrator_eval', { trigger_id: proposal.id })
   const proactive = (await run(master, 'orchestrator_eval_decide', { trigger_id: proposal.id, decision: 'accept', title: '文案修订', worktree_name: 'copy-fix',
     scope: '改副标题', reason: 'explicit copy change', intent_evidence: 'quoted', acknowledgement: '收到，把副标题改成“浏览网页”。',
-    rule_assessments: [{ rule_id: 'copy', matched: true, reason: 'copy change' }, { rule_id: 'visual', matched: false, reason: 'not visual' }],
+    rule_assessments: [{ rule_id: 'copy', matched: true, reason: 'copy change' }, { rule_id: 'visual', matched: false, reason: 'not visual' },
+      { rule_id: 'msp-local', matched: false, reason: 'not a local signal' }],
     direction: { implementation_requested: true, target_basis: 'specified', requires_design_decision: false, evidence: 'it names the text' } })).ticket as { ticket_id: string }
   const b = proactive.ticket_id
   await runtime.idle()
@@ -206,7 +207,8 @@ async function drive(host: Host) {
   })
   const policy = runtime.store.settings().policy
   // The rule ticket b was accepted under changes, so its worker is told how; the one it was not is disabled, which tells no one.
-  const rules = policy.rules.map(rule => rule.id === 'visual' ? { ...rule, enabled: false }
+  // Leave one enabled rule (copy) so the Policy section's rendering is unambiguous.
+  const rules = policy.rules.map(rule => rule.id === 'visual' || rule.id === 'msp-local' ? { ...rule, enabled: false }
     : rule.id === 'copy' ? { ...rule, instruction: `${rule.instruction} Keep the wording short.` } : rule)
   await runtime.settings.save('policy', { ...policy, rules }, runtime.store.blockRevision('policy'), 'panel')
   // Worker b's turn ends: it is idle, as DSH says when it emits the event.
