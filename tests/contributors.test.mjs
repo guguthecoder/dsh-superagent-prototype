@@ -14,13 +14,24 @@ import {
   replaceBlock,
 } from '../scripts/contributors.mjs'
 
-const discovered = normalize([
+const humans = [
   { login: 'hxh230802', contributions: 53, type: 'User' },
   { login: 'guguthecoder', contributions: 5, type: 'User' },
   { login: 'Linjiangxian0203', contributions: 1, type: 'User' },
   { login: '912D', contributions: 1, type: 'User' },
-  { login: 'dependabot[bot]', contributions: 99, type: 'Bot' },
-])
+]
+
+// 真实的一条：CI 重建 lib 之后，github-actions[bot] 也进了 contributors 列表。
+const bot = {
+  login: 'github-actions[bot]',
+  contributions: 1,
+  type: 'Bot',
+  avatar_url: 'https://avatars.githubusercontent.com/in/15368?v=4',
+  html_url: 'https://github.com/apps/github-actions',
+}
+
+const discovered = normalize(humans)
+const withBot = normalize([...humans, bot])
 
 const declared = {
   repo: 'hxh230802/dsh-superagent-prototype',
@@ -46,13 +57,11 @@ describe('contributors: repo 解析', () => {
 })
 
 describe('contributors: 名单清洗', () => {
-  it('去掉机器人、合并大小写重复、按提交数倒序', () => {
+  it('合并大小写重复、按提交数倒序', () => {
     const list = normalize([
       { login: 'alice', contributions: 3, type: 'User' },
       { login: 'Bob', contributions: 5, type: 'User' },
       { login: 'bob', contributions: 2, type: 'User' },
-      { login: 'dependabot[bot]', contributions: 9, type: 'Bot' },
-      { name: 'Anonymous Team', contributions: 100 },
     ])
     assert.deepEqual(
       list.map((person) => [person.login, person.contributions]),
@@ -63,7 +72,15 @@ describe('contributors: 名单清洗', () => {
     )
   })
 
-  it('不给匿名贡献者编造主页', () => {
+  it('机器人留下，并打上 bot 标记', () => {
+    const entry = normalize([bot])[0]
+    assert.equal(entry.login, 'github-actions[bot]')
+    assert.equal(entry.bot, true)
+    assert.equal(entry.url, 'https://github.com/apps/github-actions')
+    assert.equal(entry.avatar, 'https://avatars.githubusercontent.com/in/15368?v=4')
+  })
+
+  it('匿名贡献者跳过，没有主页可链', () => {
     assert.equal(normalize([{ name: 'Anonymous Team', contributions: 100 }]).length, 0)
   })
 })
@@ -107,21 +124,32 @@ describe('contributors: 声明 + 发现 合并', () => {
     )
   })
 
+  it('机器人排在人后面，副标题写明是机器人', () => {
+    const cards = buildCards(normalizeCredits(declared).people, withBot)
+    assert.equal(cards.length, 5)
+    assert.deepEqual(cards.at(-1), {
+      name: 'github-actions[bot]',
+      url: 'https://github.com/apps/github-actions',
+      avatar: 'https://avatars.githubusercontent.com/in/15368?v=4',
+      note: '1 次提交 · 机器人',
+      bot: true,
+    })
+  })
+
   it('上游作者不在贡献者里 —— 他只该出现在致谢', () => {
-    const cards = buildCards(normalizeCredits(declared).people, discovered)
+    const cards = buildCards(normalizeCredits(declared).people, withBot)
     assert.equal(
       cards.some((card) => /DeepSeek|Harness Team/.test(card.name)),
       false,
     )
   })
 
-  it('API 里出现、声明里没写的新人自动追加，机器人不算', () => {
+  it('API 里出现、声明里没写的人自动追加', () => {
     const cards = buildCards([{ name: 'hxh230802', login: 'hxh230802' }], discovered)
     assert.deepEqual(
       cards.map((card) => card.name),
       ['hxh230802', 'guguthecoder', '912D', 'Linjiangxian0203'],
     )
-    assert.equal(cards.some((card) => /dependabot/.test(card.name)), false)
   })
 
   it('没有 GitHub 账号的人不编造链接，头像走 identicon', () => {
@@ -150,20 +178,25 @@ describe('contributors: 声明 + 发现 合并', () => {
 })
 
 describe('contributors: 渲染', () => {
-  const cards = buildCards(normalizeCredits(declared).people, discovered)
+  const cards = buildCards(normalizeCredits(declared).people, withBot)
 
-  it('四个人四个图标，一格 72px，图标就是链接', () => {
+  it('五个图标（四个人 + 一个机器人），一格 72px，图标就是链接', () => {
     const block = renderWall(cards, { repo: 'hxh230802/dsh-superagent-prototype' })
-    assert.equal((block.match(/<td /g) ?? []).length, 4)
-    assert.equal((block.match(/width="72"/g) ?? []).length, 4, '一格一个 72px 图标')
-    assert.equal((block.match(/<a href="https:\/\/github\.com\//g) ?? []).length, 4, '图标各自指向主页')
+    assert.equal((block.match(/<td /g) ?? []).length, 5)
+    assert.equal((block.match(/width="72"/g) ?? []).length, 5, '一格一个 72px 图标')
+    assert.equal((block.match(/<a href="https:\/\/github\.com\/apps\/[^"]+"/g) ?? []).length, 1, '机器人链到 /apps/ 而不是个人主页')
     assert.equal(/<a href="https:\/\/github\.com\/hxh230802"><sub>/.test(block), false, '名字不再重复成第二个链接')
   })
 
-  it('总数与完整名单链接跟着 repo 走', () => {
+  it('总数把机器人算进去，但注明有几个', () => {
     const block = renderWall(cards, { repo: 'hxh230802/dsh-superagent-prototype' })
-    assert.match(block, /共 \*\*4\*\* 位贡献者/)
+    assert.match(block, /共 \*\*5\*\* 位贡献者（含 1 个机器人）/)
     assert.match(block, /https:\/\/github\.com\/hxh230802\/dsh-superagent-prototype\/graphs\/contributors/)
+  })
+
+  it('没有机器人时不说「含 0 个机器人」', () => {
+    const block = renderWall(buildCards(normalizeCredits(declared).people, discovered), { repo: 'o/n' })
+    assert.match(block, /共 \*\*4\*\* 位贡献者 · /)
   })
 
   it('超过 limit 时只说总数，不把长列表铺满 README', () => {

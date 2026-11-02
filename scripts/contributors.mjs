@@ -27,10 +27,11 @@ import { pathToFileURL } from 'node:url'
 export const START_MARKER = '<!-- contributors:start -->'
 export const END_MARKER = '<!-- contributors:end -->'
 
-/** 不是「人」的账号：GitHub 的 Bot 类型之外，这几个常驻机器人也一并挡掉。 */
-const IGNORED_LOGINS = new Set(['dependabot[bot]', 'github-actions[bot]', 'renovate[bot]', 'pre-commit-ci[bot]'])
 const LOGIN = /^[A-Za-z0-9-]+$/
 const HTTP = /^https?:\/\//i
+
+/** 机器人也进墙，只是副标题里标出来：谁看都知道这行不是人。 */
+const autoNote = (entry) => `${Number(entry.contributions) || 0} 次提交${entry.bot ? ' · 机器人' : ''}`
 
 /**
  * 从 `git remote get-url origin` 的各种写法里取出 `owner/repo`。
@@ -60,28 +61,34 @@ export function identicon(seed) {
 }
 
 /**
- * 过滤 + 去重 + 排序。同一账号大小写不同要合并（GitHub 允许改大小写），
+ * 过滤 + 去重 + 排序。同一账号大小写不同要合并（GitHub 允许改大小写）。
  * 匿名贡献者（没有 login）跳过：没有稳定的主页可链。
+ * 机器人保留——它真的提交了东西（比如 CI 重建 lib），只是打上 bot 标记。
  */
-export function normalize(raw, { ignored = IGNORED_LOGINS } = {}) {
+export function normalize(raw) {
   const byLogin = new Map()
   for (const entry of raw) {
     if (!entry || typeof entry !== 'object') continue
     const login = typeof entry.login === 'string' ? entry.login.trim() : ''
     if (!login) continue
     const key = login.toLowerCase()
-    if (entry.type === 'Bot' || /\[bot\]$/i.test(key) || ignored.has(key)) continue
     const contributions = Number(entry.contributions) || 0
     const previous = byLogin.get(key)
     if (previous) {
       previous.contributions += contributions
+      previous.bot ||= entry.type === 'Bot' || /\[bot\]$/i.test(key)
       continue
     }
     byLogin.set(key, {
       login,
       contributions,
-      url: `https://github.com/${login}`,
-      avatar: `https://github.com/${login}.png`,
+      bot: entry.type === 'Bot' || /\[bot\]$/i.test(key),
+      // 机器人没有 github.com/<login>.png 这种图，头像和主页都用 API 给的。
+      url: typeof entry.html_url === 'string' && entry.html_url ? entry.html_url : `https://github.com/${login}`,
+      avatar:
+        typeof entry.avatar_url === 'string' && entry.avatar_url
+          ? entry.avatar_url
+          : `https://github.com/${login}.png`,
     })
   }
   return [...byLogin.values()].sort(
@@ -134,14 +141,18 @@ export function buildCards(people, discovered, { onWarn = () => {} } = {}) {
     cards.push({
       name: person.name,
       url: person.url ?? found?.url ?? (person.login ? `https://github.com/${person.login}` : undefined),
-      avatar: person.avatar ?? (person.login ? `https://github.com/${person.login}.png` : identicon(person.name)),
-      note: person.note ?? (found ? `${found.contributions} 次提交` : undefined),
+      avatar:
+        person.avatar ??
+        found?.avatar ??
+        (person.login ? `https://github.com/${person.login}.png` : identicon(person.name)),
+      note: person.note ?? (found ? autoNote(found) : undefined),
+      bot: found?.bot ?? false,
     })
   }
 
   for (const entry of discovered) {
     if (taken.has(entry.login.toLowerCase())) continue
-    cards.push({ name: entry.login, url: entry.url, avatar: entry.avatar, note: `${entry.contributions} 次提交` })
+    cards.push({ name: entry.login, url: entry.url, avatar: entry.avatar, note: autoNote(entry), bot: entry.bot })
   }
   return cards
 }
@@ -185,8 +196,10 @@ export function renderWall(cards, { repo, limit = 24, perRow = 6 } = {}) {
   lines.push('')
 
   const rest = hidden > 0 ? `（这里显示前 ${shown.length} 位，其余不单独列出）` : ''
+  const bots = cards.filter((card) => card.bot).length
+  const mix = bots > 0 ? `（含 ${bots} 个机器人）` : ''
   const graph = repo ? ` · 完整名单见 [graphs/contributors](https://github.com/${repo}/graphs/contributors)` : ''
-  lines.push(`共 **${cards.length}** 位贡献者${rest}${graph}。`)
+  lines.push(`共 **${cards.length}** 位贡献者${mix}${rest}${graph}。`)
   return lines.join('\n')
 }
 

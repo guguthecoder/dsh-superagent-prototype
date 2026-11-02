@@ -168,37 +168,44 @@ enabled: true
 <table>
   <tr>
     <td align="center">
-      <a href="https://github.com/hxh230802"><img src="https://github.com/hxh230802.png" width="72" height="72" alt="hxh230802" title="hxh230802 · 53 次提交" /></a>
+      <a href="https://github.com/hxh230802"><img src="https://avatars.githubusercontent.com/u/106608151?v=4" width="72" height="72" alt="hxh230802" title="hxh230802 · 56 次提交" /></a>
       <br />
       <sub><b>hxh230802</b></sub>
       <br />
-      <sub>53 次提交</sub>
+      <sub>56 次提交</sub>
     </td>
     <td align="center">
-      <a href="https://github.com/guguthecoder"><img src="https://github.com/guguthecoder.png" width="72" height="72" alt="guguthecoder" title="guguthecoder · 5 次提交" /></a>
+      <a href="https://github.com/guguthecoder"><img src="https://avatars.githubusercontent.com/u/175189242?v=4" width="72" height="72" alt="guguthecoder" title="guguthecoder · 6 次提交" /></a>
       <br />
       <sub><b>guguthecoder</b></sub>
       <br />
-      <sub>5 次提交</sub>
+      <sub>6 次提交</sub>
     </td>
     <td align="center">
-      <a href="https://github.com/912D"><img src="https://github.com/912D.png" width="72" height="72" alt="912D" title="912D · 1 次提交" /></a>
+      <a href="https://github.com/912D"><img src="https://avatars.githubusercontent.com/u/347679655?v=4" width="72" height="72" alt="912D" title="912D · 1 次提交" /></a>
       <br />
       <sub><b>912D</b></sub>
       <br />
       <sub>1 次提交</sub>
     </td>
     <td align="center">
-      <a href="https://github.com/Linjiangxian0203"><img src="https://github.com/Linjiangxian0203.png" width="72" height="72" alt="Linjiangxian0203" title="Linjiangxian0203 · 1 次提交" /></a>
+      <a href="https://github.com/Linjiangxian0203"><img src="https://avatars.githubusercontent.com/u/149987761?v=4" width="72" height="72" alt="Linjiangxian0203" title="Linjiangxian0203 · 1 次提交" /></a>
       <br />
       <sub><b>Linjiangxian0203</b></sub>
       <br />
       <sub>1 次提交</sub>
     </td>
+    <td align="center">
+      <a href="https://github.com/apps/github-actions"><img src="https://avatars.githubusercontent.com/in/15368?v=4" width="72" height="72" alt="github-actions[bot]" title="github-actions[bot] · 1 次提交 · 机器人" /></a>
+      <br />
+      <sub><b>github-actions[bot]</b></sub>
+      <br />
+      <sub>1 次提交 · 机器人</sub>
+    </td>
   </tr>
 </table>
 
-共 **4** 位贡献者 · 完整名单见 [graphs/contributors](https://github.com/hxh230802/dsh-superagent-prototype/graphs/contributors)。
+共 **5** 位贡献者（含 1 个机器人） · 完整名单见 [graphs/contributors](https://github.com/hxh230802/dsh-superagent-prototype/graphs/contributors)。
 <!-- contributors:end -->
 
 > 这块由 CI 维护：[`contributors.yml`](.github/workflows/contributors.yml) 在 push 到 `main` 和每周一各刷一次，内容没变就不提交。
