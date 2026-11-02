@@ -36,7 +36,7 @@ const withBot = normalize([...humans, bot])
 const declared = {
   repo: 'hxh230802/dsh-superagent-prototype',
   people: [
-    { name: 'hxh230802', login: 'hxh230802' },
+    { name: 'hxh230802', login: 'hxh230802', maintainer: true },
     { name: 'guguthecoder', login: 'guguthecoder' },
     { name: '912D', login: '912D' },
     { name: 'Linjiangxian0203', login: 'Linjiangxian0203' },
@@ -116,7 +116,7 @@ describe('contributors: 声明 + 发现 合并', () => {
     assert.deepEqual(
       cards.map((card) => [card.name, card.note]),
       [
-        ['hxh230802', '53 次提交'],
+        ['hxh230802', '维护者 · 53 次提交'],
         ['guguthecoder', '5 次提交'],
         ['912D', '1 次提交'],
         ['Linjiangxian0203', '1 次提交'],
@@ -133,7 +133,32 @@ describe('contributors: 声明 + 发现 合并', () => {
       avatar: 'https://avatars.githubusercontent.com/in/15368?v=4',
       note: '1 次提交 · 机器人',
       bot: true,
+      maintainer: false,
     })
+  })
+
+  it('维护者永远排最前，哪怕在 JSON 里写在最后', () => {
+    const cards = buildCards(
+      [
+        { name: 'guguthecoder', login: 'guguthecoder' },
+        { name: 'hxh230802', login: 'hxh230802', maintainer: true },
+      ],
+      discovered,
+    )
+    assert.deepEqual(
+      cards.map((card) => [card.name, card.maintainer]),
+      [
+        ['hxh230802', true],
+        ['guguthecoder', false],
+        ['912D', false],
+        ['Linjiangxian0203', false],
+      ],
+    )
+    assert.equal(cards[0].note, '维护者 · 53 次提交')
+  })
+
+  it('维护者标记只接受布尔值', () => {
+    assert.throws(() => normalizeCredits({ people: [{ name: 'a', maintainer: 'yes' }] }), /maintainer 只能是/)
   })
 
   it('上游作者不在贡献者里 —— 他只该出现在致谢', () => {

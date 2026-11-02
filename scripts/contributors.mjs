@@ -33,6 +33,14 @@ const HTTP = /^https?:\/\//i
 /** 机器人也进墙，只是副标题里标出来：谁看都知道这行不是人。 */
 const autoNote = (entry) => `${Number(entry.contributions) || 0} 次提交${entry.bot ? ' · 机器人' : ''}`
 
+/** 副标题的组装顺序：身份（维护者）在前，然后是提交数。 */
+const noteOf = (maintainer, entry) => {
+  const parts = []
+  if (maintainer) parts.push('维护者')
+  if (entry) parts.push(autoNote(entry))
+  return parts.length ? parts.join(' · ') : undefined
+}
+
 /**
  * 从 `git remote get-url origin` 的各种写法里取出 `owner/repo`。
  * 支持 git@host:owner/repo.git、https://user:token@host/owner/repo.git、ssh://……
@@ -114,21 +122,26 @@ export function normalizeCredits(raw) {
       if (person[field] !== undefined && !HTTP.test(String(person[field]))) throw new Error(`${where} 的 ${field} 必须是 http(s) 地址`)
     }
     const note = person.note === undefined ? undefined : String(person.note).trim() || undefined
-    return { name, login, url: person.url, avatar: person.avatar, note }
+    if (person.maintainer !== undefined && typeof person.maintainer !== 'boolean') {
+      throw new Error(`${where} 的 maintainer 只能是 true / false`)
+    }
+    return { name, login, url: person.url, avatar: person.avatar, note, maintainer: person.maintainer === true }
   })
   return { repo, people: list }
 }
 
 /**
- * 声明的人排在前面（顺序即展示顺序），再追加 API 里没被声明过的人。
+ * 维护者永远排最前（多人时按声明顺序），其次是其他声明的人，最后是 API 里发现的新人。
  * 声明的人如果有 login，就拿 API 的提交数；没有就只用 note。
  */
 export function buildCards(people, discovered, { onWarn = () => {} } = {}) {
   const byLogin = new Map(discovered.map((entry) => [entry.login.toLowerCase(), entry]))
   const taken = new Set()
   const cards = []
+  // Array.prototype.sort 是稳定的：同组内保持声明顺序。
+  const ordered = [...people].sort((a, b) => Number(Boolean(b.maintainer)) - Number(Boolean(a.maintainer)))
 
-  for (const person of people) {
+  for (const person of ordered) {
     const key = (person.login ?? person.name).toLowerCase()
     if (taken.has(key)) {
       onWarn(`contributors.json 里重复声明了 ${person.name}，跳过`)
@@ -145,14 +158,15 @@ export function buildCards(people, discovered, { onWarn = () => {} } = {}) {
         person.avatar ??
         found?.avatar ??
         (person.login ? `https://github.com/${person.login}.png` : identicon(person.name)),
-      note: person.note ?? (found ? autoNote(found) : undefined),
+      note: person.note ?? noteOf(person.maintainer, found),
       bot: found?.bot ?? false,
+      maintainer: Boolean(person.maintainer),
     })
   }
 
   for (const entry of discovered) {
     if (taken.has(entry.login.toLowerCase())) continue
-    cards.push({ name: entry.login, url: entry.url, avatar: entry.avatar, note: autoNote(entry), bot: entry.bot })
+    cards.push({ name: entry.login, url: entry.url, avatar: entry.avatar, note: autoNote(entry), bot: entry.bot, maintainer: false })
   }
   return cards
 }
@@ -309,7 +323,8 @@ const HELP = `用法：node scripts/contributors.mjs [选项]
   --per-row N    每行几个图标（默认 6）
   -h, --help     显示这段
 
-名单在 contributors.json：repo 是 owner/name，people[] 里 name 必填，login / url / avatar / note 选填。
+名单在 contributors.json：repo 是 owner/name，people[] 里 name 必填，login / url / avatar / note / maintainer 选填。
+maintainer: true 的人永远排最前（副标题写「维护者」），其余按声明顺序，API 发现的新人补在后面。
 带 login 的人自动从 GitHub API 取提交数；没有账号的人（上游作者、历史被 rebase 掉的人）
 只显示 note。API 里出现但没声明的新人会追加在后面。
 需要 GITHUB_TOKEN（或 GH_TOKEN）来避开匿名限流。`
