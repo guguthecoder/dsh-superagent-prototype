@@ -28,10 +28,12 @@
 
 ```
 src/sources/msp.ts               MSP → Trigger（推送，不轮询）· 无人称 actor
+src/sources/msp-act.ts           接入的另一半：看得见节点、发得出信号、调得动工具
 src/sources/experiences.ts       读经验库，按信号路径命中才注入
 src/sources/experience-tools.ts  经验 CRUD（list/read/create/update/disable）
 python/msp_bridge.py             MSP 信号 → 每行一条 JSON
 tests/msp.test.mjs               8 项
+tests/msp-act.test.ts            10 项
 ```
 
 **对原型的改动：3 个文件各 1~6 行（登记），其余是新增。** 原有逻辑一行未动。

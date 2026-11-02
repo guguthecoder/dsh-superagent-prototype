@@ -26,6 +26,7 @@ import { health, sourceContext, type SourceContext } from './host.ts'
 import type { Localized, SourceKind } from './kind.ts'
 import { experienceBlock, loadExperiences, matchExperiences } from './experiences.ts'
 import { registerExperienceTools } from './experience-tools.ts'
+import { registerMspActTools, mspMesh, setMspMesh, type MspMesh } from './msp-act.ts'
 
 export const SOURCE = 'msp'
 
@@ -122,19 +123,27 @@ const available = (ctx: SourceContext): MspConfig | undefined => {
 /** 上一次启动的节点。插件会重载，旧节点不停就会占着租约和端口，新节点抢不到连接。 */
 let currentNode: { stop(): void } | null = null
 
+/** 本补丁用到的节点形状：听 + 说 + 看得见邻居。声明窄一点，vendor 换实现也不用改这里。 */
+type MspNode = MspMesh & {
+  on(p: string, cb: (sig: any) => void): unknown
+  start(): Promise<unknown>
+  stop(): void
+}
+
 export async function runMsp(ctx: SourceContext, signal: AbortSignal): Promise<unknown> {
   const config = available(ctx)
   if (!config) return
   if (currentNode) {
     try { currentNode.stop() } catch { /* 已经没了 */ }
     currentNode = null
+    setMspMesh(null)
   }
   const globs = (config.paths ?? []).map(entry => entry?.path).filter(Boolean)
   const patterns = globs.length > 0 ? globs : ['**']
 
-  let node: { on(p: string, cb: (sig: any) => void): unknown; start(): Promise<unknown>; stop(): void }
+  let node: MspNode
   try {
-    const mod = (await import('msp-ts')) as { MSPNode: new (id: string, opts?: Record<string, unknown>) => any }
+    const mod = (await import('msp-ts')) as { MSPNode: new (id: string, opts?: Record<string, unknown>) => MspNode }
     node = new mod.MSPNode(config.nodeName, { connectPolicy: 'eager' })
   } catch (error) {
     ctx.report('msp', { state: 'error', detail: `msp-ts unavailable: ${String(error).slice(0, 200)}` })
@@ -207,8 +216,15 @@ ${block}`
     return
   }
   currentNode = node
+  // 补丁一：把活着的节点交给工具层。`msp_nodes` 靠它列邻居，`msp_publish` / `msp_call`
+  // 靠它往网格里说话——「一切皆节点，一切皆信号」在这里落地，不在协议里落地。
+  setMspMesh(node)
   ctx.report('msp', { state: 'ready', detail: `listening: ${patterns.join(', ')}` })
-  signal.addEventListener('abort', () => { try { node.stop() } catch { /* already gone */ } }, { once: true })
+  signal.addEventListener('abort', () => {
+    try { node.stop() } catch { /* already gone */ }
+    // 只清掉自己：插件重载时新节点可能已经挂上了，别把新的抹了。
+    if (mspMesh() === node) setMspMesh(null)
+  }, { once: true })
   return undefined
 }
 
@@ -217,14 +233,20 @@ export const inject = ['orchestrator']
 export function apply(ctx: Context): void {
   ctx.effect(() => ctx.orchestrator.sources.register(mspKind), 'msp: source kind')
 
-  // 经验的 CRUD：模型能自己读、写、改、停用——否则经验库只能靠人喂，永远长不大。
+  // 两组工具，各自对应一块：
+  //   经验 CRUD：模型能自己读、写、改、停用——否则经验库只能靠人喂，永远长不大；
+  //   接入（补丁一）：看得见节点、发得出信号、调得动工具——接新设备不再需要写适配。
   ctx.inject(['tools'], (tctx: Context) => {
-    const disposers = registerExperienceTools((tctx as unknown as { tools: { register(def: unknown): unknown } }).tools)
+    const tools = (tctx as unknown as { tools: { register(def: unknown): unknown } }).tools
+    const disposers = [
+      ...registerExperienceTools(tools),
+      ...registerMspActTools(tools),
+    ]
     tctx.effect(() => () => {
       for (const dispose of disposers) {
         try { (dispose as () => void)() } catch { /* 已摘除 */ }
       }
-    }, 'msp: experience tools')
+    }, 'msp: experience + act tools')
   })
   ctx.effect(() => {
     const controller = new AbortController()
