@@ -1,0 +1,92 @@
+# 守住 lib/：仓库里的 lib/ 是安装时直接用的产物（DSH 从 GitHub 装插件不会跑 build），
+# 所以它必须跟 src/ 同一次提交里更新。这里用「真构建一遍，再看有没有 diff」来判定，
+# 而不是相信提交说明。
+#
+# PR：不一致就红，让人本地 pnpm build 后一起提交。
+# main：不一致就重新构建并提交，保证装了 main 的人拿到的一定是源码对应的产物。
+name: lib
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - src/**
+      - lib/**
+      - tsdown.config.ts
+      - package.json
+      - pnpm-lock.yaml
+      - .github/workflows/lib.yml
+  pull_request:
+    paths:
+      - src/**
+      - lib/**
+      - tsdown.config.ts
+      - package.json
+      - pnpm-lock.yaml
+      - .github/workflows/lib.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lib-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    name: lib 跟得上源码
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: 装依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 构建
+        run: pnpm build
+
+      - name: 判断 lib 是否落后
+        id: drift
+        run: |
+          if [ -z "$(git status --porcelain -- lib)" ]; then
+            echo "dirty=false" >> "$GITHUB_OUTPUT"
+            echo "lib 与源码一致"
+            exit 0
+          fi
+          echo "dirty=true" >> "$GITHUB_OUTPUT"
+          git --no-pager diff --stat -- lib
+          git status --porcelain -- lib
+
+      - name: PR 上不一致就失败
+        if: github.event_name == 'pull_request' && steps.drift.outputs.dirty == 'true'
+        run: |
+          echo "::error::lib/ 与 src/ 不同步。本地跑 pnpm build，把 lib/ 和源码一起提交。"
+          exit 1
+
+      - name: main 上不一致就重新构建并提交
+        if: github.event_name != 'pull_request' && steps.drift.outputs.dirty == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A -- lib
+          git commit -m "chore(lib): 重新构建产物 [skip ci]"
+          # 并发推 main 时可能被拒：rebase 后重试。
+          for attempt in 1 2 3; do
+            if git push; then
+              exit 0
+            fi
+            echo "push 失败（第 $attempt 次），rebase 后重试"
+            git pull --rebase --autostash origin main
+          done
+          echo "连续 3 次 push 失败" >&2
+          exit 1
