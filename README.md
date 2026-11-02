@@ -162,17 +162,62 @@ enabled: true
 
 ## 贡献者
 
-<a href="https://github.com/hxh230802/dsh-superagent-prototype/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=hxh230802/dsh-superagent-prototype" alt="贡献者" />
-</a>
+<!-- contributors:start -->
+<!-- 由 scripts/contributors.mjs 生成，名单看 contributors.json；CI 刷新，勿手改本块 -->
 
-图由 [contrib.rocks](https://contrib.rocks) 自动生成，会自己更新（GitHub 的贡献者统计有缓存，刚合入的人可能要过一会儿才出现）。谁做过什么，图里写不下：
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/hxh230802"><img src="https://github.com/hxh230802.png" width="72" height="72" alt="hxh230802" title="hxh230802 · 53 次提交" /></a>
+      <br />
+      <sub><b>hxh230802</b></sub>
+      <br />
+      <sub>53 次提交</sub>
+    </td>
+    <td align="center">
+      <a href="https://github.com/guguthecoder"><img src="https://github.com/guguthecoder.png" width="72" height="72" alt="guguthecoder" title="guguthecoder · 5 次提交" /></a>
+      <br />
+      <sub><b>guguthecoder</b></sub>
+      <br />
+      <sub>5 次提交</sub>
+    </td>
+    <td align="center">
+      <a href="https://github.com/912D"><img src="https://github.com/912D.png" width="72" height="72" alt="912D" title="912D · 1 次提交" /></a>
+      <br />
+      <sub><b>912D</b></sub>
+      <br />
+      <sub>1 次提交</sub>
+    </td>
+    <td align="center">
+      <a href="https://github.com/Linjiangxian0203"><img src="https://github.com/Linjiangxian0203.png" width="72" height="72" alt="Linjiangxian0203" title="Linjiangxian0203 · 1 次提交" /></a>
+      <br />
+      <sub><b>Linjiangxian0203</b></sub>
+      <br />
+      <sub>1 次提交</sub>
+    </td>
+  </tr>
+</table>
+
+共 **4** 位贡献者 · 完整名单见 [graphs/contributors](https://github.com/hxh230802/dsh-superagent-prototype/graphs/contributors)。
+<!-- contributors:end -->
+
+> 这块由 CI 维护：[`contributors.yml`](.github/workflows/contributors.yml) 在 push 到 `main` 和每周一各刷一次，内容没变就不提交。
+> 名单在 [`contributors.json`](contributors.json)：`repo` 写统计哪个仓库，`people[]` 里 `name` 必填，`login` / `url` / `avatar` / `note` 选填。
+> 带 `login` 的自动从 API 取提交数；API 里出现、声明里没写的新人会自动追加，所以不会漏。
+
+图里只有一个头像和一个提交数，谁做过什么写不下，人工维护：
 
 | 谁 | 做了什么 |
 |---|---|
 | [@hxh230802](https://github.com/hxh230802) | 这个 fork 的全部主体：MSP Source、经验库与 CRUD 工具、经验注入评估上下文、跨平台服务脚本、这份 README |
 | [@guguthecoder](https://github.com/guguthecoder) | [#1](https://github.com/hxh230802/dsh-superagent-prototype/pull/1)：修好类型门（两个文件 14 处）；让主 Session 只保留 profile 真有的工具，Windows 上不再建不出 Session |
+| [@912D](https://github.com/912D) | `src/sources/msp-act.ts`：MSP 的接入另一半——`msp_nodes` / `msp_publish` / `msp_call` 三条工具，让接一台新设备不用改代码；同批 10 项测试 |
 | [@Linjiangxian0203](https://github.com/Linjiangxian0203) | [#2](https://github.com/hxh230802/dsh-superagent-prototype/pull/2)：把「被当成自己账号发的事件而丢弃」的条数写进 GitHub 来源的 health，单账号部署不再是无迹可循的死胡同；`docs/known-issues.md` 的 K7 与部署排查表同批补上 |
+
+## 致谢
+
+上游 [`deepseek-ai/dsh-superagent-prototype`](https://github.com/deepseek-ai/dsh-superagent-prototype) 的作者（DeepSeek Harness Team）：多任务调度、准入与执行这一整层底座是他们写的。
+**他们不是这个仓库的贡献者**，所以不在上面的墙里；但没有他们就没有这个 fork。
 
 ## 许可证
 

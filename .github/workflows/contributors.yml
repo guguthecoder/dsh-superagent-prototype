@@ -1,0 +1,79 @@
+# 维护 README 里的贡献者墙。
+#
+# 数据来自 GitHub 的 contributors API，渲染逻辑只有一处：scripts/contributors.mjs。
+# 时间线：push 到 main 和每周一各跑一次，只有内容真的变了才提交；
+# PR 只做校验，墙过期就让 PR 红掉，提醒作者跑一遍脚本。
+name: contributors
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - README.md
+      - contributors.json
+      - scripts/contributors.mjs
+      - .github/workflows/contributors.yml
+  schedule:
+    # 每周一 02:23 UTC（北京 10:23）。错开整点，避开调度高峰。
+    - cron: '23 2 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: contributors-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: 校验贡献者墙
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 脚本自测（纯函数，不联网）
+        run: node --test tests/contributors.test.mjs
+      - name: 与 GitHub API 比对
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/contributors.mjs --check
+
+  refresh:
+    name: 刷新贡献者墙
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: 生成
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: node scripts/contributors.mjs
+
+      - name: 有变化才提交
+        run: |
+          if git diff --quiet -- README.md; then
+            echo "贡献者墙无变化，不提交"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "chore(readme): 刷新贡献者墙 [skip ci]"
+          # 上一步可能有人刚推了 main：失败就 rebase 重试，别让一次并发把任务打红。
+          for attempt in 1 2 3; do
+            if git push; then
+              exit 0
+            fi
+            echo "push 失败（第 $attempt 次），rebase 后重试"
+            git pull --rebase --autostash origin main
+          done
+          echo "连续 3 次 push 失败" >&2
+          exit 1
