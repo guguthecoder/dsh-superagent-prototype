@@ -175,6 +175,13 @@ enabled: true
       <sub>维护者 · 56 次提交</sub>
     </td>
     <td align="center">
+      <a href="https://github.com/Linjiangxian0203"><img src="https://avatars.githubusercontent.com/u/149987761?v=4" width="72" height="72" alt="Linjiangxian0203" title="Linjiangxian0203 · 维护者 · 1 次提交" /></a>
+      <br />
+      <sub><b>Linjiangxian0203</b></sub>
+      <br />
+      <sub>维护者 · 1 次提交</sub>
+    </td>
+    <td align="center">
       <a href="https://github.com/guguthecoder"><img src="https://avatars.githubusercontent.com/u/175189242?v=4" width="72" height="72" alt="guguthecoder" title="guguthecoder · 6 次提交" /></a>
       <br />
       <sub><b>guguthecoder</b></sub>
@@ -185,13 +192,6 @@ enabled: true
       <a href="https://github.com/912D"><img src="https://avatars.githubusercontent.com/u/347679655?v=4" width="72" height="72" alt="912D" title="912D · 1 次提交" /></a>
       <br />
       <sub><b>912D</b></sub>
-      <br />
-      <sub>1 次提交</sub>
-    </td>
-    <td align="center">
-      <a href="https://github.com/Linjiangxian0203"><img src="https://avatars.githubusercontent.com/u/149987761?v=4" width="72" height="72" alt="Linjiangxian0203" title="Linjiangxian0203 · 1 次提交" /></a>
-      <br />
-      <sub><b>Linjiangxian0203</b></sub>
       <br />
       <sub>1 次提交</sub>
     </td>
@@ -209,7 +209,7 @@ enabled: true
 <!-- contributors:end -->
 
 > 这块由 CI 维护：[`contributors.yml`](.github/workflows/contributors.yml) 在 push 到 `main` 和每周一各刷一次，内容没变就不提交。
-> 名单在 [`contributors.json`](contributors.json)：`repo` 写统计哪个仓库，`people[]` 里 `name` 必填，`login` / `url` / `avatar` / `note` 选填。
+> 名单在 [`contributors.json`](contributors.json)：`repo` 写统计哪个仓库，`people[]` 里 `name` 必填，`login` / `url` / `avatar` / `note` / `maintainer` 选填。`maintainer: true` 的人排最前，多个维护者按 JSON 里的顺序（加入顺序）。
 > 带 `login` 的自动从 API 取提交数；API 里出现、声明里没写的新人会自动追加，所以不会漏。
 
 图里只有一个头像和一个提交数，谁做过什么写不下，人工维护：

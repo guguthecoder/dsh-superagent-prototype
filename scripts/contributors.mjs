@@ -131,7 +131,8 @@ export function normalizeCredits(raw) {
 }
 
 /**
- * 维护者永远排最前（多人时按声明顺序），其次是其他声明的人，最后是 API 里发现的新人。
+ * 维护者永远排最前，多人时按声明顺序——也就是加入顺序（JSON 里从上到下写）。
+ * 其次是其他声明的人（同按声明顺序），最后是 API 里发现的新人。
  * 声明的人如果有 login，就拿 API 的提交数；没有就只用 note。
  */
 export function buildCards(people, discovered, { onWarn = () => {} } = {}) {

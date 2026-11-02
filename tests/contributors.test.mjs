@@ -37,9 +37,9 @@ const declared = {
   repo: 'hxh230802/dsh-superagent-prototype',
   people: [
     { name: 'hxh230802', login: 'hxh230802', maintainer: true },
+    { name: 'Linjiangxian0203', login: 'Linjiangxian0203', maintainer: true },
     { name: 'guguthecoder', login: 'guguthecoder' },
     { name: '912D', login: '912D' },
-    { name: 'Linjiangxian0203', login: 'Linjiangxian0203' },
   ],
 }
 
@@ -91,7 +91,7 @@ describe('contributors: 名单文件', () => {
     assert.equal(credits.repo, 'hxh230802/dsh-superagent-prototype')
     assert.deepEqual(
       credits.people.map((person) => person.login),
-      ['hxh230802', 'guguthecoder', '912D', 'Linjiangxian0203'],
+      ['hxh230802', 'Linjiangxian0203', 'guguthecoder', '912D'],
     )
   })
 
@@ -111,15 +111,15 @@ describe('contributors: 名单文件', () => {
 })
 
 describe('contributors: 声明 + 发现 合并', () => {
-  it('仓库里四个人都在，按声明的顺序，提交数来自 API', () => {
+  it('仓库里四个人都在：两个维护者在前（按加入顺序），其余在后', () => {
     const cards = buildCards(normalizeCredits(declared).people, discovered)
     assert.deepEqual(
       cards.map((card) => [card.name, card.note]),
       [
         ['hxh230802', '维护者 · 53 次提交'],
+        ['Linjiangxian0203', '维护者 · 1 次提交'],
         ['guguthecoder', '5 次提交'],
         ['912D', '1 次提交'],
-        ['Linjiangxian0203', '1 次提交'],
       ],
     )
   })
@@ -155,6 +155,17 @@ describe('contributors: 声明 + 发现 合并', () => {
       ],
     )
     assert.equal(cards[0].note, '维护者 · 53 次提交')
+  })
+
+  it('两个维护者都在最前，组内按声明顺序（= 加入顺序）', () => {
+    const cards = buildCards(normalizeCredits(declared).people, discovered)
+    assert.deepEqual(
+      cards.slice(0, 2).map((card) => [card.name, card.maintainer]),
+      [
+        ['hxh230802', true],
+        ['Linjiangxian0203', true],
+      ],
+    )
   })
 
   it('维护者标记只接受布尔值', () => {
