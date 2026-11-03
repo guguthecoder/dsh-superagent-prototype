@@ -217,7 +217,7 @@ enabled: true
 | 谁 | 做了什么 |
 |---|---|
 | [@hxh230802](https://github.com/hxh230802) | 这个 fork 的全部主体：MSP Source、经验库与 CRUD 工具、经验注入评估上下文、跨平台服务脚本、这份 README |
-| [@guguthecoder](https://github.com/guguthecoder) | [#1](https://github.com/hxh230802/dsh-superagent-prototype/pull/1)：修好类型门（两个文件 14 处）；让主 Session 只保留 profile 真有的工具，Windows 上不再建不出 Session |
+| [@guguthecoder](https://github.com/guguthecoder) | [#1](https://github.com/hxh230802/dsh-superagent-prototype/pull/1)：修好类型门（两个文件 14 处），主 Session 只保留 profile 真有的工具，Windows 上不再建不出 Session；[#3](https://github.com/hxh230802/dsh-superagent-prototype/pull/3)：经验工具的 id 统一走 `fileOf` 校验，并修替换串注入与 CRLF 停用两处写入；[#4](https://github.com/hxh230802/dsh-superagent-prototype/pull/4)：Windows 上会挂的几个测试套件跟上这版的新默认值与探测方式；[#8](https://github.com/hxh230802/dsh-superagent-prototype/pull/8)：`*.test.*` 接入 `pnpm check`，不再有跑不到的测试 |
 | [@912D](https://github.com/912D) | `src/sources/msp-act.ts`：MSP 的接入另一半——`msp_nodes` / `msp_publish` / `msp_call` 三条工具，让接一台新设备不用改代码；同批 10 项测试 |
 | [@Linjiangxian0203](https://github.com/Linjiangxian0203) | [#2](https://github.com/hxh230802/dsh-superagent-prototype/pull/2)：把「被当成自己账号发的事件而丢弃」的条数写进 GitHub 来源的 health，单账号部署不再是无迹可循的死胡同；`docs/known-issues.md` 的 K7 与部署排查表同批补上 |
 
