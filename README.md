@@ -168,11 +168,11 @@ enabled: true
 <table>
   <tr>
     <td align="center">
-      <a href="https://github.com/hxh230802"><img src="https://avatars.githubusercontent.com/u/106608151?v=4" width="72" height="72" alt="hxh230802" title="hxh230802 · 维护者 · 56 次提交" /></a>
+      <a href="https://github.com/hxh230802"><img src="https://avatars.githubusercontent.com/u/106608151?v=4" width="72" height="72" alt="hxh230802" title="hxh230802 · 维护者 · 59 次提交" /></a>
       <br />
       <sub><b>hxh230802</b></sub>
       <br />
-      <sub>维护者 · 56 次提交</sub>
+      <sub>维护者 · 59 次提交</sub>
     </td>
     <td align="center">
       <a href="https://github.com/Linjiangxian0203"><img src="https://avatars.githubusercontent.com/u/149987761?v=4" width="72" height="72" alt="Linjiangxian0203" title="Linjiangxian0203 · 维护者 · 1 次提交" /></a>
