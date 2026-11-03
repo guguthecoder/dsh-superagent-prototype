@@ -50,6 +50,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:node": "node --test \"tests/**/*.test.*\"",
+    "test:windows": "vitest run --exclude tests/service-script.spec.ts --exclude tests/sources.spec.ts --exclude tests/environment.spec.ts --exclude tests/deployment.spec.ts --exclude tests/commands.spec.ts",
     "check": "pnpm typecheck && pnpm test && pnpm test:node && pnpm build"
   },
   "engines": {

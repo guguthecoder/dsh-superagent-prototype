@@ -1,0 +1,49 @@
+# Windows 上的测试。
+#
+# 仓库里有一批测试用 POSIX 语义做替身：`#!/bin/sh` 假 gh / lark-cli、tmux 守护脚本、
+# symlink、`kill -9`、`:` 作 PATH 分隔符。它们测的是 POSIX 下的行为，在 Windows 上必然失败，
+# 与被测代码无关，所以在这里按文件排除（`pnpm test:windows`）。
+# 其余套件、node:test 那批、类型检查和构建都必须过。
+name: test-windows
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-windows-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Windows / Node 22
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: 装依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 类型检查
+        run: pnpm typecheck
+
+      - name: node:test 那批测试
+        run: pnpm test:node
+
+      - name: vitest（排除 POSIX 专用替身）
+        run: pnpm test:windows
+
+      - name: 构建
+        run: pnpm build
